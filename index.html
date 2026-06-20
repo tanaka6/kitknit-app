@@ -132,7 +132,7 @@ textarea{resize:vertical;min-height:56px;line-height:1.6;}
 .doc-title{font-size:19px;font-weight:700;}
 .doc-brand{font-size:10px;color:#999;}
 .doc-hr{border:none;border-top:2px solid #2a2a2a;margin:5px 0 11px;}
-.doc-page{column-count:2;column-gap:20px;height:185mm;margin-bottom:8mm;}
+.doc-page{column-count:2;column-gap:20px;column-fill:auto;height:185mm;margin-bottom:8mm;}
 .doc-page+.doc-page{break-before:page;page-break-before:always;}
 .doc-colbreak{break-after:column;}
 .doc-keepnext{break-after:avoid;page-break-after:avoid;break-inside:avoid;page-break-inside:avoid;}
@@ -202,7 +202,7 @@ textarea{resize:vertical;min-height:56px;line-height:1.6;}
   .doc-sh{background-color:#d8d8d8!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .doc-sn,.doc-badge{background-color:#2a2a2a!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .doc-tbl th,.doc-rt th{background-color:#ebebeb!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .doc-page{column-count:2!important;column-gap:16px!important;max-height:185mm!important;height:auto!important;}
+  .doc-page{column-count:2!important;column-gap:16px!important;column-fill:auto!important;max-height:185mm!important;height:auto!important;}
   .doc-keepnext{break-after:avoid!important;page-break-after:avoid!important;break-inside:avoid!important;page-break-inside:avoid!important;}
   .doc-trsafe{break-inside:avoid!important;page-break-inside:avoid!important;}
   .doc-figs{display:flex!important;flex-wrap:wrap!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -575,7 +575,7 @@ function buildMnDoc(){
   function bSec(s){
     const rows=s.rows.map(r=>`<tr class="doc-trsafe"><td>${esc(r.dan)}</td><td>${esc(r.moku)}</td><td style="white-space:pre-wrap;">${esc(r.method)}</td></tr>`).join('');
     const figs=(s.figs&&s.figs.length)?`<div class="doc-figs">${s.figs.map(f=>`<div class="doc-figi"><img src="${f.dataUrl}" style="max-height:${f.size||80}px;max-width:${(f.size||80)*1.5}px;"><div class="doc-figl">${esc(f.label)}</div></div>`).join('')}</div>`:'';
-    return `<div class="doc-pl doc-keepnext"><div class="doc-chk">✓</div>${esc(s.name)}</div>${s.note?s.note.split('\n').filter(Boolean).map(l=>`<div class="doc-pn">${esc(l)}</div>`).join(''):''}<table class="doc-rt"><thead><tr><th style="width:13%">段目</th><th style="width:13%">目数</th><th>編み方</th></tr></thead><tbody>${rows}</tbody></table>${figs}`;
+    return `<div class="doc-pl doc-keepnext"><div class="doc-chk">✓</div>${esc(s.name)}</div>${s.note?s.note.split('\n').filter(Boolean).map(l=>`<div class="doc-pn">${esc(l)}</div>`).join(''):''}<table class="doc-rt"><tbody><tr class="doc-trsafe"><th style="width:13%">段目</th><th style="width:13%">目数</th><th>編み方</th></tr>${rows}</tbody></table>${figs}`;
   }
   const fh=fins.filter(s=>s.text).map(s=>`<div class="doc-fi">${esc(s.text)}</div>`).join('');
 
@@ -583,7 +583,7 @@ function buildMnDoc(){
   const blocks=[];
   blocks.push({html:`<div class="doc-sh doc-keepnext"><div class="doc-sn">0</div><div class="doc-st">はじめに</div></div><div class="doc-ind">${intro.split('\n').filter(Boolean).map(l=>`<div class="doc-ii">${esc(l)}</div>`).join('')}</div>`,brk:fixedBrk.intro});
   blocks.push({html:`<div class="doc-sh doc-keepnext"><div class="doc-sn">1</div><div class="doc-st">道具</div></div><div class="doc-ind">${tl}</div>`,brk:fixedBrk.tools});
-  blocks.push({html:`<div class="doc-sh doc-keepnext"><div class="doc-sn">2</div><div class="doc-st">凡例</div></div><div class="doc-ind"><table class="doc-tbl"><thead><tr><th>用語・記号</th><th>略語</th></tr></thead><tbody>${ar}</tbody></table></div>`,brk:fixedBrk.abbrev});
+  blocks.push({html:`<div class="doc-sh doc-keepnext"><div class="doc-sn">2</div><div class="doc-st">凡例</div></div><div class="doc-ind"><table class="doc-tbl"><tbody><tr class="doc-trsafe"><th>用語・記号</th><th>略語</th></tr>${ar}</tbody></table></div>`,brk:fixedBrk.abbrev});
   secs.forEach((s,i)=>{
     const heading=i===0?`<div class="doc-sh doc-keepnext"><div class="doc-sn">3</div><div class="doc-st">編み方</div></div>`:'';
     blocks.push({html:`${heading}<div class="doc-ind">${bSec(s)}</div>`,brk:s.brk||'none'});
