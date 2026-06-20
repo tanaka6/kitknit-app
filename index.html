@@ -132,9 +132,15 @@ textarea{resize:vertical;min-height:56px;line-height:1.6;}
 .doc-title{font-size:19px;font-weight:700;}
 .doc-brand{font-size:10px;color:#999;}
 .doc-hr{border:none;border-top:2px solid #2a2a2a;margin:5px 0 11px;}
-.doc-cols{column-count:2;column-gap:20px;column-fill:auto;height:185mm;}
-.doc-blk{break-inside:avoid;page-break-inside:avoid;display:block;}
+.doc-page{column-count:2;column-gap:20px;height:185mm;margin-bottom:8mm;}
+.doc-page+.doc-page{break-before:page;page-break-before:always;}
+.doc-colbreak{break-after:column;}
+.doc-keepnext{break-after:avoid;page-break-after:avoid;break-inside:avoid;page-break-inside:avoid;}
+.doc-trsafe{break-inside:avoid;page-break-inside:avoid;}
 .doc-sec{margin-bottom:13px;}
+.brk-row{display:flex;align-items:center;gap:5px;margin-top:5px;}
+.brk-row span{font-size:10px;color:var(--muted);}
+.brk-sel{font-size:11px;color:var(--dark);border:1px solid var(--border);border-radius:5px;padding:3px 6px;font-family:inherit;background:#fff;}
 .doc-sh{display:flex;align-items:center;gap:6px;background:#d8d8d8;padding:5px 10px;border-radius:4px;margin-bottom:7px;width:100%;}
 .doc-sn{width:19px;height:19px;border-radius:50%;background:#2a2a2a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;}
 .doc-st{font-weight:700;font-size:12px;}
@@ -196,8 +202,9 @@ textarea{resize:vertical;min-height:56px;line-height:1.6;}
   .doc-sh{background-color:#d8d8d8!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .doc-sn,.doc-badge{background-color:#2a2a2a!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .doc-tbl th,.doc-rt th{background-color:#ebebeb!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .doc-cols{column-count:2!important;column-gap:16px!important;column-fill:auto!important;height:185mm!important;}
-  .doc-blk{break-inside:avoid!important;page-break-inside:avoid!important;}
+  .doc-page{column-count:2!important;column-gap:16px!important;max-height:185mm!important;height:auto!important;}
+  .doc-keepnext{break-after:avoid!important;page-break-after:avoid!important;break-inside:avoid!important;page-break-inside:avoid!important;}
+  .doc-trsafe{break-inside:avoid!important;page-break-inside:avoid!important;}
   .doc-figs{display:flex!important;flex-wrap:wrap!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .doc-figi img{display:block!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   /* cover print */
@@ -331,16 +338,19 @@ textarea{resize:vertical;min-height:56px;line-height:1.6;}
         <textarea id="mnIntro" rows="4">本書では立ち上がりの目を記載しておりません。
 長編み等、立ち上がりを1目とする場合は、適宜読み替えて下さい。
 例：長×3→立ち上がり1目、長×2</textarea>
+        <div class="brk-row"><span>📄 区切り：</span><select class="brk-sel" id="brkIntro" onchange="synFixedBrk('intro',this.value)"><option value="none" selected>続けて流す</option><option value="col">↓ この後で次のカラムへ</option><option value="page">↓ この後で次のページへ</option></select></div>
       </div>
       <div class="card">
         <div class="card-hd"><div class="nbadge">1</div><div class="ctitle">道具</div></div>
         <label class="fl">1行ずつ入力</label>
         <textarea id="mnTools" rows="3">かぎ針4/0号
 （必要に応じて）ボンド、グルーガン等</textarea>
+        <div class="brk-row"><span>📄 区切り：</span><select class="brk-sel" id="brkTools" onchange="synFixedBrk('tools',this.value)"><option value="none" selected>続けて流す</option><option value="col">↓ この後で次のカラムへ</option><option value="page">↓ この後で次のページへ</option></select></div>
       </div>
       <div class="card">
         <div class="card-hd"><div class="nbadge">2</div><div class="ctitle">凡例（自動出力）</div></div>
         <div class="abbrev-box"><b>細</b>：細編み　<b>細増</b>：細編みを1目に2目編み入れる　<b>細減</b>：細編みの2目一度　<b>中長</b>：中長編み　<b>長</b>：長編み　<b>長増</b>：長編みを1目に2目編み入れる　<b>長増々</b>：長編みを1目に3目編み入れる　<b>引抜</b>：引き抜き編み</div>
+        <div class="brk-row"><span>📄 区切り：</span><select class="brk-sel" id="brkAbbrev" onchange="synFixedBrk('abbrev',this.value)"><option value="none">続けて流す</option><option value="col" selected>↓ この後で次のカラムへ</option><option value="page">↓ この後で次のページへ</option></select></div>
       </div>
       <div class="card">
         <div class="card-hd"><div class="nbadge">3</div><div class="ctitle">編み方</div></div>
@@ -351,6 +361,7 @@ textarea{resize:vertical;min-height:56px;line-height:1.6;}
         <div class="card-hd"><div class="nbadge">4</div><div class="ctitle">仕上げ</div></div>
         <div id="finCont"></div>
         <button class="btn-a" onclick="addFin()">＋ 手順を追加</button>
+        <div class="brk-row"><span>📄 区切り：</span><select class="brk-sel" id="brkFinish" onchange="synFixedBrk('finish',this.value)"><option value="none" selected>続けて流す</option><option value="col">↓ この後で次のカラムへ</option><option value="page">↓ この後で次のページへ</option></select></div>
       </div>
     </div>
     <!-- Manual Preview -->
@@ -487,20 +498,27 @@ function resetCover(){
 ══════════════════════════════ */
 let secs=[],fins=[];
 let sid=0,rid=0,fid=0;
+let fixedBrk={intro:'none',tools:'none',abbrev:'col',finish:'none'}; // 固定セクション(はじめに/道具/凡例/仕上げ)の区切り設定
 const ABBREV=[["（）","（）の中の指示を1目に対して編み入れる"],["［］","［］の中の指示を指定回数分繰り返す"],["引き抜き編み","引抜"],["細編み","細"],["細編みを1目に2目編み入れる","細増"],["細編みの2目一度","細減"],["中長編み","中長"],["長編み","長"],["長編みを1目に2目編み入れる","長増"],["長編みを1目に3目編み入れる","長増々"]];
 
 function initManual(){addSec();addFin();}
-function addSec(){const id=++sid;secs.push({id,name:'本体',note:'',rows:[],figs:[]});addRowD(id);renderSecs();}
+function addSec(){const id=++sid;secs.push({id,name:'本体',note:'',rows:[],figs:[],brk:'none'});addRowD(id);renderSecs();}
 function addRowD(si){const s=secs.find(x=>x.id===si);if(s)s.rows.push({id:++rid,dan:'',moku:'',method:''});}
 function rmSec(id){secs=secs.filter(s=>s.id!==id);renderSecs();}
 function addRow(si){addRowD(si);renderSecs();}
 function rmRow(si,ri){const s=secs.find(x=>x.id===si);if(!s||s.rows.length<=1)return;s.rows=s.rows.filter(r=>r.id!==ri);renderSecs();}
 function synSec(id,f,v){const s=secs.find(x=>x.id===id);if(s)s[f]=v;}
+function synSecBrk(id,v){const s=secs.find(x=>x.id===id);if(s)s.brk=v;}
+function synFixedBrk(key,v){fixedBrk[key]=v;}
 function synRow(si,ri,f,v){const s=secs.find(x=>x.id===si);if(!s)return;const r=s.rows.find(x=>x.id===ri);if(r)r[f]=v;}
 function addFig(si,inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{const s=secs.find(x=>x.id===si);if(!s)return;if(!s.figs)s.figs=[];s.figs.push({dataUrl:e.target.result,label:'補足図'+(s.figs.length+1),size:80});renderSecs();};r.readAsDataURL(f);}
 function rmFig(si,fi){const s=secs.find(x=>x.id===si);if(!s||!s.figs)return;s.figs.splice(fi,1);renderSecs();}
 function synFigL(si,fi,v){const s=secs.find(x=>x.id===si);if(s&&s.figs)s.figs[fi].label=v;}
 function synFigS(si,fi,v){const s=secs.find(x=>x.id===si);if(s&&s.figs)s.figs[fi].size=parseInt(v)||80;}
+
+function brkOptHtml(cur){
+  return `<option value="none" ${cur==='none'?'selected':''}>続けて流す</option><option value="col" ${cur==='col'?'selected':''}>↓ この後で次のカラムへ</option><option value="page" ${cur==='page'?'selected':''}>↓ この後で次のページへ</option>`;
+}
 
 function renderSecs(){
   document.getElementById('secCont').innerHTML=secs.map(s=>`
@@ -534,6 +552,10 @@ function renderSecs(){
     </div>
     <label class="fig-up-lbl">📎 画像を追加<input type="file" accept="image/*" onchange="addFig(${s.id},this)"></label>
   </div>
+  <div class="brk-row">
+    <span>📄 区切り：</span>
+    <select class="brk-sel" onchange="synSecBrk(${s.id},this.value)">${brkOptHtml(s.brk||'none')}</select>
+  </div>
 </div>`).join('');
 }
 
@@ -549,20 +571,51 @@ function buildMnDoc(){
   const intro=document.getElementById('mnIntro').value||'';
   const tools=document.getElementById('mnTools').value||'';
   const tl=tools.split('\n').filter(Boolean).map(t=>`<div class="doc-ti">${esc(t)}</div>`).join('');
-  const ar=ABBREV.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('');
+  const ar=ABBREV.map(r=>`<tr class="doc-trsafe"><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('');
   function bSec(s){
-    const rows=s.rows.map(r=>`<tr><td>${esc(r.dan)}</td><td>${esc(r.moku)}</td><td style="white-space:pre-wrap;">${esc(r.method)}</td></tr>`).join('');
+    const rows=s.rows.map(r=>`<tr class="doc-trsafe"><td>${esc(r.dan)}</td><td>${esc(r.moku)}</td><td style="white-space:pre-wrap;">${esc(r.method)}</td></tr>`).join('');
     const figs=(s.figs&&s.figs.length)?`<div class="doc-figs">${s.figs.map(f=>`<div class="doc-figi"><img src="${f.dataUrl}" style="max-height:${f.size||80}px;max-width:${(f.size||80)*1.5}px;"><div class="doc-figl">${esc(f.label)}</div></div>`).join('')}</div>`:'';
-    return `<div style="margin-bottom:11px;break-inside:avoid;page-break-inside:avoid;"><div class="doc-pl"><div class="doc-chk">✓</div>${esc(s.name)}</div>${s.note?s.note.split('\n').filter(Boolean).map(l=>`<div class="doc-pn">${esc(l)}</div>`).join(''):''}<table class="doc-rt"><thead><tr><th style="width:13%">段目</th><th style="width:13%">目数</th><th>編み方</th></tr></thead><tbody>${rows}</tbody></table>${figs}</div>`;
+    return `<div class="doc-pl doc-keepnext"><div class="doc-chk">✓</div>${esc(s.name)}</div>${s.note?s.note.split('\n').filter(Boolean).map(l=>`<div class="doc-pn">${esc(l)}</div>`).join(''):''}<table class="doc-rt"><thead><tr><th style="width:13%">段目</th><th style="width:13%">目数</th><th>編み方</th></tr></thead><tbody>${rows}</tbody></table>${figs}`;
   }
   const fh=fins.filter(s=>s.text).map(s=>`<div class="doc-fi">${esc(s.text)}</div>`).join('');
-  return `<div class="doc"><div class="doc-hd"><div class="doc-hl"><div class="doc-badge">編み方説明書</div><div class="doc-title">${esc(title)}</div></div><div class="doc-brand">KitKnit for HandMade</div></div><div class="doc-hr"></div><div class="doc-cols"><div class="doc-blk doc-sec"><div class="doc-sh"><div class="doc-sn">0</div><div class="doc-st">はじめに</div></div><div class="doc-ind">${intro.split('\n').filter(Boolean).map(l=>`<div class="doc-ii">${esc(l)}</div>`).join('')}</div></div><div class="doc-blk doc-sec"><div class="doc-sh"><div class="doc-sn">1</div><div class="doc-st">道具</div></div><div class="doc-ind">${tl}</div></div><div class="doc-blk doc-sec"><div class="doc-sh"><div class="doc-sn">2</div><div class="doc-st">凡例</div></div><div class="doc-ind"><table class="doc-tbl"><thead><tr><th>用語・記号</th><th>略語</th></tr></thead><tbody>${ar}</tbody></table></div></div><div class="doc-blk doc-sec"><div class="doc-sh"><div class="doc-sn">3</div><div class="doc-st">編み方</div></div><div class="doc-ind">${secs.map(bSec).join('')}</div></div><div class="doc-blk doc-sec"><div class="doc-sh"><div class="doc-sn">4</div><div class="doc-st">仕上げ</div></div><div class="doc-ind">${fh}</div></div></div></div>`;
+
+  // ── ブロック列を組み立て: 各ブロックは{html, brk} ──
+  const blocks=[];
+  blocks.push({html:`<div class="doc-sh doc-keepnext"><div class="doc-sn">0</div><div class="doc-st">はじめに</div></div><div class="doc-ind">${intro.split('\n').filter(Boolean).map(l=>`<div class="doc-ii">${esc(l)}</div>`).join('')}</div>`,brk:fixedBrk.intro});
+  blocks.push({html:`<div class="doc-sh doc-keepnext"><div class="doc-sn">1</div><div class="doc-st">道具</div></div><div class="doc-ind">${tl}</div>`,brk:fixedBrk.tools});
+  blocks.push({html:`<div class="doc-sh doc-keepnext"><div class="doc-sn">2</div><div class="doc-st">凡例</div></div><div class="doc-ind"><table class="doc-tbl"><thead><tr><th>用語・記号</th><th>略語</th></tr></thead><tbody>${ar}</tbody></table></div>`,brk:fixedBrk.abbrev});
+  secs.forEach((s,i)=>{
+    const heading=i===0?`<div class="doc-sh doc-keepnext"><div class="doc-sn">3</div><div class="doc-st">編み方</div></div>`:'';
+    blocks.push({html:`${heading}<div class="doc-ind">${bSec(s)}</div>`,brk:s.brk||'none'});
+  });
+  blocks.push({html:`<div class="doc-sh doc-keepnext"><div class="doc-sn">4</div><div class="doc-st">仕上げ</div></div><div class="doc-ind">${fh}</div>`,brk:fixedBrk.finish});
+
+  // ── ブロック列をページ単位にまとめる。各ページ内は doc-page(2カラム自動流し込み)、
+  //    'col'指定は同一ページ内に break-after:column を挿入、'page'指定は新しいdoc-pageを開始。
+  //    doc-blk自体は分割可。見出し(doc-keepnext)と各行(doc-trsafe)だけ分割禁止にして
+  //    長い表は自然にページ/カラムをまたいで続けられるようにする ──
+  const pagesHtml=[];
+  let curPage=[];
+  blocks.forEach(b=>{
+    const wrapped=b.brk==='col'
+      ? `<div class="doc-sec doc-colbreak">${b.html}</div>`
+      : `<div class="doc-sec">${b.html}</div>`;
+    curPage.push(wrapped);
+    if(b.brk==='page'){
+      pagesHtml.push(curPage.join(''));
+      curPage=[];
+    }
+  });
+  if(curPage.length) pagesHtml.push(curPage.join(''));
+  const pagesOut=pagesHtml.map(p=>`<div class="doc-page">${p}</div>`).join('');
+
+  return `<div class="doc"><div class="doc-hd"><div class="doc-hl"><div class="doc-badge">編み方説明書</div><div class="doc-title">${esc(title)}</div></div><div class="doc-brand">KitKnit for HandMade</div></div><div class="doc-hr"></div>${pagesOut}</div>`;
 }
 function mnPreview(){const o=document.getElementById('mnPov');if(o.classList.contains('active')){o.classList.remove('active');}else{document.getElementById('mnPrevCont').innerHTML=buildMnDoc();o.classList.add('active');}}
 function mnPrint(){document.getElementById('printContent').innerHTML=buildMnDoc();setTimeout(()=>window.print(),300);}
 
 function saveManual(){
-  const d={_type:'manual',title:document.getElementById('mnTitle').value,intro:document.getElementById('mnIntro').value,tools:document.getElementById('mnTools').value,secs,fins,sid,rid,fid,savedAt:new Date().toLocaleString('ja-JP')};
+  const d={_type:'manual',title:document.getElementById('mnTitle').value,intro:document.getElementById('mnIntro').value,tools:document.getElementById('mnTools').value,secs,fins,sid,rid,fid,fixedBrk,savedAt:new Date().toLocaleString('ja-JP')};
   const name=(d.title||'説明書').replace(/[\\/:*?"<>|]/g,'_').slice(0,30);
   dlJSON(d,`kitknitManual_${name}.json`);
   toast('💾 説明書データをダウンロードしました');
@@ -573,6 +626,11 @@ function applyManual(d){
   document.getElementById('mnTools').value=d.tools||'';
   secs=d.secs||[]; fins=d.fins||[];
   sid=d.sid||0; rid=d.rid||0; fid=d.fid||0;
+  fixedBrk=d.fixedBrk||{intro:'none',tools:'none',abbrev:'col',finish:'none'};
+  ['intro','tools','abbrev','finish'].forEach(k=>{
+    const el=document.getElementById('brk'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(el) el.value=fixedBrk[k]||'none';
+  });
   renderSecs(); renderFin();
   toast('📂 説明書データを読み込みました');
 }
@@ -581,6 +639,9 @@ function resetManual(){
   document.getElementById('mnIntro').value='本書では立ち上がりの目を記載しておりません。\n長編み等、立ち上がりを1目とする場合は、適宜読み替えて下さい。\n例：長×3→立ち上がり1目、長×2';
   document.getElementById('mnTools').value='かぎ針4/0号\n（必要に応じて）ボンド、グルーガン等';
   secs=[];fins=[];sid=0;rid=0;fid=0;
+  fixedBrk={intro:'none',tools:'none',abbrev:'col',finish:'none'};
+  ['brkIntro','brkTools','brkFinish'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='none';});
+  const brkA=document.getElementById('brkAbbrev'); if(brkA) brkA.value='col';
   addSec();addFin();
   toast('🔄 説明書ビルダーを初期化しました','err');
 }
