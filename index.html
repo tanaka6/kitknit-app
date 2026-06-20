@@ -358,10 +358,9 @@ textarea{resize:vertical;min-height:56px;line-height:1.6;}
         <button class="btn-a" onclick="addSec()">＋ パーツ・セクションを追加</button>
       </div>
       <div class="card">
-        <div class="card-hd"><div class="nbadge">4</div><div class="ctitle">仕上げ</div></div>
+        <div class="card-hd"><div class="ctitle">追加セクション（仕上げ・保管方法など）</div></div>
         <div id="finCont"></div>
-        <button class="btn-a" onclick="addFin()">＋ 手順を追加</button>
-        <div class="brk-row"><span>📄 区切り：</span><select class="brk-sel" id="brkFinish" onchange="synFixedBrk('finish',this.value)"><option value="none" selected>続けて流す</option><option value="col">↓ この後で次のカラムへ</option><option value="page">↓ この後で次のページへ</option></select></div>
+        <button class="btn-a" onclick="addExtra('新しいセクション')">＋ セクションを追加</button>
       </div>
     </div>
     <!-- Manual Preview -->
@@ -496,12 +495,12 @@ function resetCover(){
 /* ══════════════════════════════
    MANUAL BUILDER
 ══════════════════════════════ */
-let secs=[],fins=[];
-let sid=0,rid=0,fid=0;
-let fixedBrk={intro:'none',tools:'none',abbrev:'col',finish:'none'}; // 固定セクション(はじめに/道具/凡例/仕上げ)の区切り設定
+let secs=[],extra=[];
+let sid=0,rid=0,fid=0,xid=0;
+let fixedBrk={intro:'none',tools:'none',abbrev:'col'}; // 固定セクション(はじめに/道具/凡例)の区切り設定
 const ABBREV=[["（）","（）の中の指示を1目に対して編み入れる"],["［］","［］の中の指示を指定回数分繰り返す"],["引き抜き編み","引抜"],["細編み","細"],["細編みを1目に2目編み入れる","細増"],["細編みの2目一度","細減"],["中長編み","中長"],["長編み","長"],["長編みを1目に2目編み入れる","長増"],["長編みを1目に3目編み入れる","長増々"]];
 
-function initManual(){addSec();addFin();}
+function initManual(){addSec();addExtra('仕上げ');}
 function addSec(){const id=++sid;secs.push({id,name:'本体',note:'',rows:[],figs:[],brk:'none'});addRowD(id);renderSecs();}
 function addRowD(si){const s=secs.find(x=>x.id===si);if(s)s.rows.push({id:++rid,dan:'',moku:'',method:''});}
 function rmSec(id){secs=secs.filter(s=>s.id!==id);renderSecs();}
@@ -559,11 +558,49 @@ function renderSecs(){
 </div>`).join('');
 }
 
-function addFin(){fins.push({id:++fid,text:''});renderFin();}
-function rmFin(id){if(fins.length<=1)return;fins=fins.filter(s=>s.id!==id);renderFin();}
-function synFin(id,v){const s=fins.find(x=>x.id===id);if(s)s.text=v;}
-function renderFin(){
-  document.getElementById('finCont').innerHTML=fins.map(s=>`<div class="fr"><span>•</span><input type="text" style="flex:1;" value="${esc(s.text)}" oninput="synFin(${s.id},this.value)" placeholder="仕上げ手順">${fins.length>1?`<button class="btn-d" onclick="rmFin(${s.id})">✕</button>`:''}</div>`).join('');
+/* ── 自由セクション（仕上げ等）：タイトル＋手順リスト＋補足図、複数追加・削除可 ── */
+function addExtra(name){const id=++xid;extra.push({id,name:name||'追加セクション',fins:[{id:++fid,text:''}],figs:[],brk:'none'});renderExtra();}
+function rmExtra(id){if(extra.length<=0)return;extra=extra.filter(x=>x.id!==id);renderExtra();}
+function synExtraName(id,v){const x=extra.find(e=>e.id===id);if(x)x.name=v;}
+function synExtraBrk(id,v){const x=extra.find(e=>e.id===id);if(x)x.brk=v;}
+function addExtraFin(xi){const x=extra.find(e=>e.id===xi);if(x)x.fins.push({id:++fid,text:''});renderExtra();}
+function rmExtraFin(xi,fi){const x=extra.find(e=>e.id===xi);if(!x||x.fins.length<=1)return;x.fins=x.fins.filter(f=>f.id!==fi);renderExtra();}
+function synExtraFin(xi,fi,v){const x=extra.find(e=>e.id===xi);if(!x)return;const f=x.fins.find(y=>y.id===fi);if(f)f.text=v;}
+function addExtraFig(xi,inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{const x=extra.find(s=>s.id===xi);if(!x)return;if(!x.figs)x.figs=[];x.figs.push({dataUrl:e.target.result,label:'補足図'+(x.figs.length+1),size:80});renderExtra();};r.readAsDataURL(f);}
+function rmExtraFig(xi,fi){const x=extra.find(s=>s.id===xi);if(!x||!x.figs)return;x.figs.splice(fi,1);renderExtra();}
+function synExtraFigL(xi,fi,v){const x=extra.find(s=>s.id===xi);if(x&&x.figs)x.figs[fi].label=v;}
+function synExtraFigS(xi,fi,v){const x=extra.find(s=>s.id===xi);if(x&&x.figs)x.figs[fi].size=parseInt(v)||80;}
+
+function renderExtra(){
+  document.getElementById('finCont').innerHTML=extra.map(x=>`
+<div class="sec-box">
+  <div class="sec-top">
+    <input type="text" class="sec-ni" value="${esc(x.name)}" oninput="synExtraName(${x.id},this.value)" placeholder="セクション名（例：仕上げ）">
+    <button class="btn-d" onclick="rmExtra(${x.id})">削除</button>
+  </div>
+  ${x.fins.map(f=>`<div class="fr"><span>•</span><input type="text" style="flex:1;" value="${esc(f.text)}" oninput="synExtraFin(${x.id},${f.id},this.value)" placeholder="手順">${x.fins.length>1?`<button class="btn-d" onclick="rmExtraFin(${x.id},${f.id})">✕</button>`:''}</div>`).join('')}
+  <button class="btn-a" style="margin-top:5px;" onclick="addExtraFin(${x.id})">＋ 手順を追加</button>
+  <div class="fig-area">
+    <div class="fig-tit">📷 補足図</div>
+    <div class="fig-list">
+      ${(x.figs||[]).map((fg,fi)=>`<div class="fig-item">
+        <button class="fig-del" onclick="rmExtraFig(${x.id},${fi})">✕</button>
+        <img src="${fg.dataUrl}" alt="${esc(fg.label)}" style="height:${fg.size||80}px;">
+        <input type="text" value="${esc(fg.label)}" oninput="synExtraFigL(${x.id},${fi},this.value)" placeholder="補足図①" style="margin-bottom:3px;">
+        <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
+          <span style="font-size:10px;color:#888;">サイズ</span>
+          <input type="range" min="40" max="200" value="${fg.size||80}" oninput="synExtraFigS(${x.id},${fi},this.value);this.previousElementSibling.previousElementSibling.style.height=this.value+'px';" style="flex:1;height:16px;accent-color:#5a8a5e;">
+          <span style="font-size:10px;color:#888;width:28px;">${fg.size||80}px</span>
+        </div>
+      </div>`).join('')}
+    </div>
+    <label class="fig-up-lbl">📎 画像を追加<input type="file" accept="image/*" onchange="addExtraFig(${x.id},this)"></label>
+  </div>
+  <div class="brk-row">
+    <span>📄 区切り：</span>
+    <select class="brk-sel" onchange="synExtraBrk(${x.id},this.value)">${brkOptHtml(x.brk||'none')}</select>
+  </div>
+</div>`).join('');
 }
 
 function buildMnDoc(){
@@ -577,8 +614,6 @@ function buildMnDoc(){
     const figs=(s.figs&&s.figs.length)?`<div class="doc-figs">${s.figs.map(f=>`<div class="doc-figi"><img src="${f.dataUrl}" style="max-height:${f.size||80}px;max-width:${(f.size||80)*1.5}px;"><div class="doc-figl">${esc(f.label)}</div></div>`).join('')}</div>`:'';
     return `<div class="doc-pl doc-keepnext"><div class="doc-chk">✓</div>${esc(s.name)}</div>${s.note?s.note.split('\n').filter(Boolean).map(l=>`<div class="doc-pn">${esc(l)}</div>`).join(''):''}<table class="doc-rt"><tbody><tr class="doc-trsafe"><th style="width:13%">段目</th><th style="width:13%">目数</th><th>編み方</th></tr>${rows}</tbody></table>${figs}`;
   }
-  const fh=fins.filter(s=>s.text).map(s=>`<div class="doc-fi">${esc(s.text)}</div>`).join('');
-
   // ── ブロック列を組み立て: 各ブロックは{html, brk} ──
   const blocks=[];
   blocks.push({html:`<div class="doc-sh doc-keepnext"><div class="doc-sn">0</div><div class="doc-st">はじめに</div></div><div class="doc-ind">${intro.split('\n').filter(Boolean).map(l=>`<div class="doc-ii">${esc(l)}</div>`).join('')}</div>`,brk:fixedBrk.intro});
@@ -588,7 +623,11 @@ function buildMnDoc(){
     const heading=i===0?`<div class="doc-sh doc-keepnext"><div class="doc-sn">3</div><div class="doc-st">編み方</div></div>`:'';
     blocks.push({html:`${heading}<div class="doc-ind">${bSec(s)}</div>`,brk:s.brk||'none'});
   });
-  blocks.push({html:`<div class="doc-sh doc-keepnext"><div class="doc-sn">4</div><div class="doc-st">仕上げ</div></div><div class="doc-ind">${fh}</div>`,brk:fixedBrk.finish});
+  extra.forEach((x,i)=>{
+    const fl=x.fins.filter(f=>f.text).map(f=>`<div class="doc-fi">${esc(f.text)}</div>`).join('');
+    const xfigs=(x.figs&&x.figs.length)?`<div class="doc-figs">${x.figs.map(f=>`<div class="doc-figi"><img src="${f.dataUrl}" style="max-height:${f.size||80}px;max-width:${(f.size||80)*1.5}px;"><div class="doc-figl">${esc(f.label)}</div></div>`).join('')}</div>`:'';
+    blocks.push({html:`<div class="doc-sh doc-keepnext"><div class="doc-sn">${4+i}</div><div class="doc-st">${esc(x.name)}</div></div><div class="doc-ind">${fl}${xfigs}</div>`,brk:x.brk||'none'});
+  });
 
   // ── ブロック列をページ単位にまとめる。各ページ内は doc-page(2カラム自動流し込み)、
   //    'col'指定は同一ページ内に break-after:column を挿入、'page'指定は新しいdoc-pageを開始。
@@ -615,7 +654,7 @@ function mnPreview(){const o=document.getElementById('mnPov');if(o.classList.con
 function mnPrint(){document.getElementById('printContent').innerHTML=buildMnDoc();setTimeout(()=>window.print(),300);}
 
 function saveManual(){
-  const d={_type:'manual',title:document.getElementById('mnTitle').value,intro:document.getElementById('mnIntro').value,tools:document.getElementById('mnTools').value,secs,fins,sid,rid,fid,fixedBrk,savedAt:new Date().toLocaleString('ja-JP')};
+  const d={_type:'manual',title:document.getElementById('mnTitle').value,intro:document.getElementById('mnIntro').value,tools:document.getElementById('mnTools').value,secs,extra,sid,rid,fid,xid,fixedBrk,savedAt:new Date().toLocaleString('ja-JP')};
   const name=(d.title||'説明書').replace(/[\\/:*?"<>|]/g,'_').slice(0,30);
   dlJSON(d,`kitknitManual_${name}.json`);
   toast('💾 説明書データをダウンロードしました');
@@ -624,25 +663,29 @@ function applyManual(d){
   document.getElementById('mnTitle').value=d.title||'';
   document.getElementById('mnIntro').value=d.intro||'';
   document.getElementById('mnTools').value=d.tools||'';
-  secs=d.secs||[]; fins=d.fins||[];
-  sid=d.sid||0; rid=d.rid||0; fid=d.fid||0;
-  fixedBrk=d.fixedBrk||{intro:'none',tools:'none',abbrev:'col',finish:'none'};
-  ['intro','tools','abbrev','finish'].forEach(k=>{
+  secs=d.secs||[];
+  sid=d.sid||0; rid=d.rid||0; fid=d.fid||0; xid=d.xid||0;
+  // 旧形式(fins配列=仕上げ手順のみ)との互換: extraが無ければfinsから仕上げセクションを1個作る
+  if(d.extra){ extra=d.extra; }
+  else if(d.fins && d.fins.length){ extra=[{id:++xid,name:'仕上げ',fins:d.fins,figs:[],brk:'none'}]; }
+  else { extra=[]; }
+  fixedBrk=d.fixedBrk||{intro:'none',tools:'none',abbrev:'col'};
+  ['intro','tools','abbrev'].forEach(k=>{
     const el=document.getElementById('brk'+k.charAt(0).toUpperCase()+k.slice(1));
     if(el) el.value=fixedBrk[k]||'none';
   });
-  renderSecs(); renderFin();
+  renderSecs(); renderExtra();
   toast('📂 説明書データを読み込みました');
 }
 function resetManual(){
   document.getElementById('mnTitle').value='うさぎのあみぐるみ';
   document.getElementById('mnIntro').value='本書では立ち上がりの目を記載しておりません。\n長編み等、立ち上がりを1目とする場合は、適宜読み替えて下さい。\n例：長×3→立ち上がり1目、長×2';
   document.getElementById('mnTools').value='かぎ針4/0号\n（必要に応じて）ボンド、グルーガン等';
-  secs=[];fins=[];sid=0;rid=0;fid=0;
-  fixedBrk={intro:'none',tools:'none',abbrev:'col',finish:'none'};
-  ['brkIntro','brkTools','brkFinish'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='none';});
+  secs=[];extra=[];sid=0;rid=0;fid=0;xid=0;
+  fixedBrk={intro:'none',tools:'none',abbrev:'col'};
+  ['brkIntro','brkTools'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='none';});
   const brkA=document.getElementById('brkAbbrev'); if(brkA) brkA.value='col';
-  addSec();addFin();
+  addSec();addExtra('仕上げ');
   toast('🔄 説明書ビルダーを初期化しました','err');
 }
 
